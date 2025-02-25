@@ -26,12 +26,14 @@ begin
 	drop table if exists public.measurment_types;
 	drop table if exists public.military_ranks;
 	drop table if exists public.measurment_settings;
+	drop table if exists public.calc_air_temp;
 
 	drop sequence if exists public.measurment_input_params_seq;
 	drop sequence if exists public.measurment_baths_seq;
 	drop sequence if exists public.employees_seq;
 	drop sequence if exists public.military_ranks_seq;
 	drop sequence if exists public.measurment_types_seq;
+	drop sequence if exists public.calc_air_temp_seq;
 end;
 
 raise notice 'Удаление старых данных выполнено успешно';
@@ -63,6 +65,8 @@ values(1, 'Воловиков Александр Сергеевич','1978-06-24
 create sequence employees_seq start 2;
 
 alter table employees alter column id set default nextval('public.employees_seq');
+
+
 
 create table measurment_types
 (
@@ -143,6 +147,166 @@ create table calc_temperatures_correction
 
 insert into public.calc_temperatures_correction(temperature, correction)
 Values(0, 0.5),(5, 0.5),(10, 1), (20,1), (25, 2), (30, 3.5), (40, 4.5);
+
+-- Создание таблицы температуры воздуха
+CREATE SEQUENCE calc_air_temp_seq;
+
+CREATE TABLE calc_air_temp
+(
+    id INTEGER NOT NULL DEFAULT nextval('calc_air_temp_seq'),
+    measurement_type_id INTEGER NOT NULL,
+    height INTEGER NOT NULL,
+    is_positive BOOLEAN NOT NULL,
+    data INTEGER[] NOT NULL,
+    PRIMARY KEY (id)
+);
+
+-- Заполнение таблицы температуры воздуха
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(200,1,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(200,1,False,array[-1,-2,-3,-4,-5,-6,-7,-8,-8,-9,-19,-29,-39,-49]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(400,1,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(400,1,False,array[-1,-2,-3,-4,-5,-6,-6,-7,-8,-9,-19,-29,-38,-48]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(800,1,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(800,1,False,array[-1,-2,-3,-4,-5,-6,-6,-7,-7,-8,-18,-28,-37,-46]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(1200,1,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(1200,1,False,array[-1,-2,-3,-4,-4,-5,-5,-6,-7,-8,-17,-26,-35,-44]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(1600,1,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(1600,1,False,array[-1,-2,-3,-3,-4,-4,-5,-6,-7,-7,-17,-25,-34,-42]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(2000,1,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(2000,1,False,array[-1,-2,-3,-3,-4,-4,-5,-6,-6,-7,-16,-24,-32,-40]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(2400,1,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(2400,1,False,array[-1,-2,-2,-3,-4,-4,-5,-5,-6,-7,-15,-23,-31,-38]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(3000,1,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(3000,1,False,array[-1,-2,-2,-3,-4,-4,-4,-5,-5,-6,-15,-22,-30,-37]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(4000,1,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(4000,1,False,array[-1,-2,-2,-3,-4,-4,-4,-4,-5,-6,-14,-20,-27,-34]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(200,2,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(200,2,False,array[-1,-2,-3,-4,-5,-6,-7,-8,-8,-9,-19,-29,-39,-49]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(400,2,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(400,2,False,array[-1,-2,-3,-4,-5,-6,-6,-7,-8,-9,-19,-29,-38,-48]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(800,2,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(800,2,False,array[-1,-2,-3,-4,-5,-6,-6,-7,-7,-8,-18,-28,-37,-46]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(1200,2,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(1200,2,False,array[-1,-2,-3,-4,-4,-5,-5,-6,-7,-8,-17,-26,-35,-44]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(1600,2,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(1600,2,False,array[-1,-2,-3,-3,-4,-4,-5,-6,-7,-7,-17,-25,-34,-42]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(2000,2,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(2000,2,False,array[-1,-2,-3,-3,-4,-4,-5,-6,-6,-7,-16,-24,-32,-40]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(2400,2,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(2400,2,False,array[-1,-2,-2,-3,-4,-4,-5,-5,-6,-7,-15,-23,-31,-38]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(3000,2,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(3000,2,False,array[-1,-2,-2,-3,-4,-4,-4,-5,-5,-6,-15,-22,-30,-37]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(4000,2,True,array[1,2,3,4,5,6,7,8,9,10,20,30]);
+
+insert into public.calc_air_temp( height, measurement_type_id, is_positive, data)
+
+values(4000,2,False,array[-1,-2,-2,-3,-4,-4,-4,-4,-5,-6,-14,-20,-27,-34]);
+-- Конец заполнения
+
 
 drop type  if exists interpolation_type;
 create type interpolation_type as
@@ -675,3 +839,52 @@ begin
 	raise notice 'Набор тестовых данных сформирован успешно';
 
 end $$;
+
+
+-- Создание процедуры для расчета среднего отклонения воздуха
+CREATE OR REPLACE PROCEDURE pr_calc_air_temperature_deviation(
+    IN par_temperature numeric(8,2),
+    IN par_height numeric(8,2),
+    IN par_measurement_type_id integer,
+    OUT var_result numeric[]
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    var_is_positive boolean;
+BEGIN
+    var_is_positive := par_temperature >= 0;
+    
+    SELECT data INTO var_result
+    FROM public.calc_air_temp
+    WHERE height = par_height 
+    AND measurement_type_id = par_measurement_type_id
+    AND is_positive = var_is_positive;
+    
+    IF var_result IS NULL THEN
+        var_result := ARRAY[]::numeric[];
+    END IF;
+END;
+$$;
+
+DO $$
+DECLARE
+    var_temperature numeric(8,2) := 13.0;
+    var_height numeric(8,2) := 400;
+    var_measurement_type_id integer := 1;
+    var_result numeric[];
+BEGIN
+    CALL pr_calc_air_temperature_deviation(
+        var_temperature,
+        var_height,
+        var_measurement_type_id,
+        var_result
+    );
+    
+    RAISE NOTICE 'Результат расчета отклонения температуры:';
+    RAISE NOTICE 'Температура: %', var_temperature;
+    RAISE NOTICE 'Высота: %', var_height;
+    RAISE NOTICE 'Тип измерения: %', var_measurement_type_id;
+    RAISE NOTICE 'Массив отклонений: %', var_result;
+END;
+$$;
