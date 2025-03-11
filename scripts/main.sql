@@ -1046,7 +1046,7 @@ BEGIN
     SELECT AVG(
         CASE 
             WHEN temperature BETWEEN 0 AND 40 THEN 
-                (public.fn_calc_header_temperature(temperature) - 15.9)
+                (public.fn_calc_header_temperature(temperature))
             ELSE 
                 NULL
         END
