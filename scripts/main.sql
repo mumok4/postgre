@@ -373,7 +373,7 @@ declare
 	var_result numeric(8,2) default 0;
 begin	
 
-	raise notice 'Расчет отклонения приземной виртуальной температуры по температуре %', par_temperature;
+	-- raise notice 'Расчет отклонения приземной виртуальной температуры по температуре %', par_temperature;
 
 	Select coalesce(value::numeric(8,2), default_temperature) 
 	from public.measurment_settings 
@@ -589,7 +589,7 @@ as $body$
 	        var_denominator numeric(8,2) default 0;
 	begin
 
-  				raise notice 'Расчет интерполяции для температуры %', par_temperature;
+  				-- raise notice 'Расчет интерполяции для температуры %', par_temperature;
 
                 if exists (select 1 from public.calc_temperature_correction where temperature = par_temperature ) then
                 begin
@@ -632,7 +632,7 @@ as $body$
                                 limit 1
                         ) as rightPart;
 
-                        raise notice 'Граничные значения %', var_interpolation;
+                        -- raise notice 'Граничные значения %', var_interpolation;
 
                         var_denominator := var_interpolation.x1 - var_interpolation.x0;
                         if var_denominator = 0.0 then
@@ -1031,6 +1031,46 @@ begin
 
 end $$;
 
+DROP PROCEDURE IF EXISTS public.sp_calculate_avg_deviations;
+CREATE OR REPLACE PROCEDURE public.sp_calculate_avg_deviations(
+    IN par_measurement_type_id INTEGER,  
+    OUT avg_temperature_deviation NUMERIC(8,2),  
+    OUT avg_wind_speed NUMERIC(8,2),             
+    OUT avg_wind_direction NUMERIC(8,2)          
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    temp_deviation NUMERIC(8,2);
+BEGIN
+    SELECT AVG(
+        CASE 
+            WHEN temperature BETWEEN 0 AND 40 THEN 
+                (public.fn_calc_header_temperature(temperature) - 15.9)
+            ELSE 
+                NULL
+        END
+    )
+    INTO avg_temperature_deviation
+    FROM public.measurment_input_params
+    WHERE measurment_type_id = par_measurement_type_id;
+
+    SELECT AVG(wind_speed)
+    INTO avg_wind_speed
+    FROM public.measurment_input_params
+    WHERE measurment_type_id = par_measurement_type_id;
+
+    SELECT AVG(wind_direction)
+    INTO avg_wind_direction
+    FROM public.measurment_input_params
+    WHERE measurment_type_id = par_measurement_type_id;
+
+    RAISE NOTICE 'Среднее отклонение температуры: %', avg_temperature_deviation;
+    RAISE NOTICE 'Средняя скорость ветра: %', avg_wind_speed;
+    RAISE NOTICE 'Среднее направление ветра: %', avg_wind_direction;
+END;
+$$;
+
 do $$
 declare
 	 var_position integer;
@@ -1180,4 +1220,21 @@ left join fails_cte as t3 on t1.id = t3.emploee_id
 left join measurments_height_cte as t4 on t1.id = t4.emploee_id
 order by coalesce(quantity_fails,0) asc, coalesce(min_height, 0) asc ;
 
-select * from vw_report_fails_height_statistics
+select * from vw_report_fails_height_statistics;
+
+DO $$
+DECLARE
+    avg_temp_dev NUMERIC(8,2);
+    avg_wind_speed NUMERIC(8,2);
+    avg_wind_dir NUMERIC(8,2);
+BEGIN
+    -- Расчет для ДМК (ID = 1)
+    CALL public.sp_calculate_avg_deviations(1, avg_temp_dev, avg_wind_speed, avg_wind_dir);
+    RAISE NOTICE 'Результаты для ДМК: Температура: %, Скорость ветра: %, Направление ветра: %', 
+        avg_temp_dev, avg_wind_speed, avg_wind_dir;
+
+    -- Расчет для Ветрового ружья (ID = 2)
+    CALL public.sp_calculate_avg_deviations(2, avg_temp_dev, avg_wind_speed, avg_wind_dir);
+    RAISE NOTICE 'Результаты для Ветрового ружья: Температура: %, Скорость ветра: %, Направление ветра: %', 
+        avg_temp_dev, avg_wind_speed, avg_wind_dir;
+END $$;
