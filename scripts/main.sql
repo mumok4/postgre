@@ -42,6 +42,7 @@ begin
 	drop table if exists public.calc_correction_types;
 	drop table if exists public.calc_corrections;
 	drop table if exists public.calc_corrections_height;
+	DROP TABLE IF EXISTS temp_input_params;
 
 	drop sequence if exists public.measurment_input_params_seq cascade;
 	drop sequence if exists public.measurment_baths_seq cascade;
@@ -53,6 +54,7 @@ begin
 	drop sequence if exists public.calc_correction_types_seq cascade;
 	drop sequence if exists public.calc_corrections_seq cascade;
 	drop sequence if exists public.calc_corrections_height_seq cascade;
+	DROP SEQUENCE IF EXISTS temp_input_params_seq cascade;
 
 end;
 
@@ -212,6 +214,18 @@ create type calc_result_type as
 	deviationWindDirection numeric(8,2)
 );
 
+DROP TYPE IF EXISTS public.calc_result_response_type;
+CREATE TYPE public.calc_result_response_type AS (
+    header VARCHAR(100),
+    calc_result public.calc_result_type[]
+
+	deviationTemperature numeric(8,2),
+
+	deviationWind numeric(8,2),
+
+	deviationWindDirection numeric(8,2)
+);
+
 create sequence calc_correction_types_seq;
 create table calc_correction_types
 (
@@ -290,6 +304,22 @@ values(1, 8, array[-1, -2, -3, -4, -5, -6, -7, -8, -8, -9, -20, -29, -39, -49]),
 (3, 7, array[3]), 
 (4, 7, array[3]) 
 ;
+
+CREATE SEQUENCE IF NOT EXISTS temp_input_params_seq;
+CREATE TABLE IF NOT EXISTS temp_input_params (
+    id INTEGER NOT NULL PRIMARY KEY DEFAULT nextval('public.temp_input_params_seq'),
+    emploee_name VARCHAR(100),
+    measurment_type_id INTEGER NOT NULL,
+    height NUMERIC(8,2) DEFAULT 0,
+    temperature NUMERIC(8,2) DEFAULT 0,
+    pressure NUMERIC(8,2) DEFAULT 0,
+    wind_direction NUMERIC(8,2) DEFAULT 0,
+    wind_speed NUMERIC(8,2) DEFAULT 0,
+    bullet_demolition_range NUMERIC(8,2) DEFAULT 0,
+    measurment_input_params_id INTEGER,
+    error_message TEXT,
+    calc_result JSONB
+);
 
 raise notice 'Расчетные структуры сформированы';
 
@@ -752,6 +782,70 @@ $body$;
 
 raise notice 'Структура сформирована успешно';
 end $$;
+
+CREATE OR REPLACE FUNCTION fn_tr_temp_input_params()
+RETURNS TRIGGER AS $$
+DECLARE 
+    var_check_result public.check_result_type;
+    var_input_params public.input_params_type;
+    var_response public.calc_result_response_type;
+    var_calc_result public.calc_result_type[];
+    var_emploee_id integer;
+BEGIN
+    var_check_result := fn_check_input_params(
+        NEW.height,
+        NEW.temperature,
+        NEW.pressure,
+        NEW.wind_direction,
+        NEW.wind_speed,
+        NEW.bullet_demolition_range
+    );
+
+    IF var_check_result.is_check = FALSE THEN
+        NEW.error_message := var_check_result.error_message;
+        RETURN NEW;
+    END IF;
+
+    var_input_params := var_check_result.params;
+
+    SELECT id INTO var_emploee_id
+    FROM public.employees
+    WHERE name = NEW.emploee_name;
+
+    IF var_emploee_id IS NULL THEN
+        INSERT INTO public.employees (name, military_rank_id)
+        VALUES (NEW.emploee_name, 1)
+        RETURNING id INTO var_emploee_id;
+    END IF;
+
+    var_response.header := public.fn_calc_header_meteo_avg(var_input_params);
+
+    CALL public.sp_calc_corrections(
+        par_input_params => var_input_params,
+        par_measurement_type_id => NEW.measurment_type_id,
+        par_results => var_calc_result
+    );
+
+    var_response.calc_result := var_calc_result;
+    NEW.calc_result := row_to_json(var_response);
+
+    INSERT INTO public.measurment_input_params (
+        measurment_type_id, height, temperature, pressure, wind_direction, wind_speed, bullet_demolition_range
+    ) VALUES (
+        NEW.measurment_type_id, NEW.height, NEW.temperature, NEW.pressure, NEW.wind_direction, NEW.wind_speed, NEW.bullet_demolition_range
+    ) RETURNING id INTO NEW.measurment_input_params_id;
+
+    INSERT INTO public.measurment_baths (emploee_id, measurment_input_param_id, started)
+    VALUES (var_emploee_id, NEW.measurment_input_params_id, NOW());
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER tr_temp_input_params
+BEFORE INSERT ON temp_input_params
+FOR EACH ROW
+EXECUTE FUNCTION fn_tr_temp_input_params();
 
 do $$
 declare
