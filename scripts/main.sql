@@ -218,6 +218,12 @@ DROP TYPE IF EXISTS public.calc_result_response_type;
 CREATE TYPE public.calc_result_response_type AS (
     header VARCHAR(100),
     calc_result public.calc_result_type[]
+
+	deviationTemperature numeric(8,2),
+
+	deviationWind numeric(8,2),
+
+	deviationWindDirection numeric(8,2)
 );
 
 create sequence calc_correction_types_seq;
